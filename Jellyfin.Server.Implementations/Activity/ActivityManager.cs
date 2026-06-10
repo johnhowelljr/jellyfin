@@ -58,9 +58,9 @@ public class ActivityManager : IActivityManager
         {
             // TODO switch to LeftJoin in .NET 10.
             var entries = from a in dbContext.ActivityLogs
-                join u in dbContext.Users on a.UserId equals u.Id into ugj
-                from u in ugj.DefaultIfEmpty()
-                select new ExpandedActivityLog { ActivityLog = a, Username = u.Username };
+                          join u in dbContext.Users on a.UserId equals u.Id into ugj
+                          from u in ugj.DefaultIfEmpty()
+                          select new ExpandedActivityLog { ActivityLog = a, Username = u.Username };
 
             if (query.HasUserId is not null)
             {
@@ -70,6 +70,11 @@ public class ActivityManager : IActivityManager
             if (query.MinDate is not null)
             {
                 entries = entries.Where(e => e.ActivityLog.DateCreated >= query.MinDate.Value);
+            }
+
+            if (query.MaxDate is not null)
+            {
+                entries = entries.Where(e => e.ActivityLog.DateCreated <= query.MaxDate.Value);
             }
 
             if (!string.IsNullOrEmpty(query.Name))
@@ -166,9 +171,19 @@ public class ActivityManager : IActivityManager
         foreach (var (sortBy, sortOrder) in sorting)
         {
             var orderBy = MapOrderBy(sortBy);
-            ordered = sortOrder == SortOrder.Ascending
-                ? (ordered ?? query).OrderBy(orderBy)
-                : (ordered ?? query).OrderByDescending(orderBy);
+
+            if (ordered == null)
+            {
+                ordered = sortOrder == SortOrder.Ascending
+                    ? query.OrderBy(orderBy)
+                    : query.OrderByDescending(orderBy);
+            }
+            else
+            {
+                ordered = sortOrder == SortOrder.Ascending
+                    ? ordered.ThenBy(orderBy)
+                    : ordered.ThenByDescending(orderBy);
+            }
         }
 
         return ordered;

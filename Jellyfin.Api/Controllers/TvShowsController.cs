@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using Jellyfin.Api.Attributes;
 using Jellyfin.Api.Extensions;
 using Jellyfin.Api.Helpers;
 using Jellyfin.Api.ModelBinders;
@@ -28,6 +27,7 @@ namespace Jellyfin.Api.Controllers;
 /// </summary>
 [Route("Shows")]
 [Authorize]
+[Tags("Show")]
 public class TvShowsController : BaseJellyfinApiController
 {
     private readonly IUserManager _userManager;
@@ -69,7 +69,6 @@ public class TvShowsController : BaseJellyfinApiController
     /// <param name="enableUserData">Optional. Include user data.</param>
     /// <param name="nextUpDateCutoff">Optional. Starting date of shows to show in Next Up section.</param>
     /// <param name="enableTotalRecordCount">Whether to enable the total records count. Defaults to true.</param>
-    /// <param name="disableFirstEpisode">Whether to disable sending the first episode in a series as next up.</param>
     /// <param name="enableResumable">Whether to include resumable episodes in next up results.</param>
     /// <param name="enableRewatching">Whether to include watched episodes in next up results.</param>
     /// <returns>A <see cref="QueryResult{BaseItemDto}"/> with the next up episodes.</returns>
@@ -88,7 +87,6 @@ public class TvShowsController : BaseJellyfinApiController
         [FromQuery] bool? enableUserData,
         [FromQuery] DateTime? nextUpDateCutoff,
         [FromQuery] bool enableTotalRecordCount = true,
-        [FromQuery][ParameterObsolete] bool disableFirstEpisode = false,
         [FromQuery] bool enableResumable = true,
         [FromQuery] bool enableRewatching = false)
     {
@@ -234,7 +232,7 @@ public class TvShowsController : BaseJellyfinApiController
 
         if (seasonId.HasValue) // Season id was supplied. Get episodes by season id.
         {
-            var item = _libraryManager.GetItemById<BaseItem>(seasonId.Value);
+            var item = _libraryManager.GetItemById<BaseItem>(seasonId.Value, user);
             if (item is not Season seasonItem)
             {
                 return NotFound("No season exists with Id " + seasonId);
@@ -244,7 +242,7 @@ public class TvShowsController : BaseJellyfinApiController
         }
         else if (season.HasValue) // Season number was supplied. Get episodes by season number
         {
-            var series = _libraryManager.GetItemById<Series>(seriesId);
+            var series = _libraryManager.GetItemById<Series>(seriesId, user);
             if (series is null)
             {
                 return NotFound("Series not found");
@@ -260,7 +258,7 @@ public class TvShowsController : BaseJellyfinApiController
         }
         else // No season number or season id was supplied. Returning all episodes.
         {
-            if (_libraryManager.GetItemById<BaseItem>(seriesId) is not Series series)
+            if (_libraryManager.GetItemById<BaseItem>(seriesId, user) is not Series series)
             {
                 return NotFound("Series not found");
             }

@@ -1,6 +1,7 @@
 #pragma warning disable CA1819 // XML serialization handles collections improperly, so we need to use arrays
 
 #nullable disable
+using System.ComponentModel;
 using MediaBrowser.Model.Entities;
 
 namespace MediaBrowser.Model.Configuration;
@@ -42,6 +43,7 @@ public class EncodingOptions
         VppTonemappingContrast = 1;
         H264Crf = 23;
         H265Crf = 28;
+        EncoderPreset = EncoderPreset.auto;
         DeinterlaceDoubleRate = false;
         DeinterlaceMethod = DeinterlaceMethod.yadif;
         EnableDecodingColorDepth10Hevc = true;
@@ -60,6 +62,7 @@ public class EncodingOptions
         SubtitleExtractionTimeoutMinutes = 30;
         AllowOnDemandMetadataBasedKeyframeExtractionForExtensions = ["mkv"];
         HardwareDecodingCodecs = ["h264", "vc1"];
+        HlsAudioSeekStrategy = HlsAudioSeekStrategy.TrimCopiedAudio;
     }
 
     /// <summary>
@@ -215,7 +218,7 @@ public class EncodingOptions
     /// <summary>
     /// Gets or sets the encoder preset.
     /// </summary>
-    public EncoderPreset? EncoderPreset { get; set; }
+    public EncoderPreset EncoderPreset { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the framerate is doubled when deinterlacing.
@@ -301,4 +304,10 @@ public class EncodingOptions
     /// Gets or sets the file extensions on-demand metadata based keyframe extraction is enabled for.
     /// </summary>
     public string[] AllowOnDemandMetadataBasedKeyframeExtractionForExtensions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the method used for audio seeking in HLS.
+    /// </summary>
+    [DefaultValue(HlsAudioSeekStrategy.TrimCopiedAudio)]
+    public HlsAudioSeekStrategy HlsAudioSeekStrategy { get; set; }
 }
